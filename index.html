@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Al Jazeera Documentary Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body class="flex flex-col h-screen p-4 bg-gray-100" id="pageBody" dir="ltr">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-xl font-bold" id="title">Al Jazeera Documentary Chat</h1>
+      <div class="flex items-center gap-3">
+        <span id="modeLabel" class="px-2 py-1 rounded text-white text-sm bg-green-600">Mock Mode</span>
+        <button id="toggleMode" class="px-3 py-1 rounded-lg border bg-white text-sm">Toggle</button>
+        <button id="clearChat" class="px-3 py-1 rounded-lg bg-red-500 text-white text-sm">Clear Chat</button>
+        <button id="toggleLang" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-sm">عربي</button>
+      </div>
+    </div>
+
+    <div id="chatLog" class="flex-1 overflow-y-auto bg-white rounded-lg shadow p-3 space-y-2"></div>
+
+    <div class="flex mt-3">
+      <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none" rows="2"></textarea>
+      <button id="sendBtn" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">Send</button>
+    </div>
+
+    <script>
+      let useMock = true
+      // const backendUrl = "https://your-worker.your-subdomain.workers.dev/chat";
+      const backendUrl = 'https://icons.1px.workers.dev/chat'
+      let history = JSON.parse(localStorage.getItem('ajdChatHistory') || '[]')
+      let currentLang = localStorage.getItem('ajdChatLang') || 'en' // default English
+
+      const translations = {
+        en: {
+          title: 'Al Jazeera Documentary Chat',
+          welcome: '👋 Welcome! This is a demo of the Al Jazeera Documentary Chat interface. You can use Mock Mode without a backend, or switch to Backend Mode once your server is running.',
+          send: 'Send',
+          clear: 'Clear Chat',
+          mock: 'Mock Mode',
+          backend: 'Backend Mode',
+          toggleLang: 'عربي',
+          placeholder: 'Type your message...'
+        },
+        ar: {
+          title: 'دردشة الجزيرة الوثائقية',
+          welcome: '👋 مرحباً! هذه واجهة تجريبية لدردشة الجزيرة الوثائقية. يمكنك استخدام وضع المحاكاة بدون خادم، أو التبديل إلى وضع الخادم عند تشغيله.',
+          send: 'إرسال',
+          clear: 'مسح المحادثة',
+          mock: 'وضع المحاكاة',
+          backend: 'وضع الخادم',
+          toggleLang: 'English',
+          placeholder: 'اكتب رسالتك...'
+        }
+      }
+
+      function setLanguage(lang) {
+        currentLang = lang
+        localStorage.setItem('ajdChatLang', lang)
+        const t = translations[lang]
+        $('#title').text(t.title)
+        $('#clearChat').text(t.clear)
+        $('#sendBtn').text(t.send)
+        $('#toggleLang').text(t.toggleLang)
+        $('#chatInput').attr('placeholder', t.placeholder)
+        $('#modeLabel').text(useMock ? t.mock : t.backend)
+
+        if (lang === 'ar') {
+          $('#pageBody').attr('dir', 'rtl')
+        } else {
+          $('#pageBody').attr('dir', 'ltr')
+        }
+      }
+
+      // Load existing messages from localStorage
+      $(document).ready(() => {
+        setLanguage(currentLang)
+        if (history.length === 0) {
+          const welcome = translations[currentLang].welcome
+          appendMessage('assistant', welcome)
+          addToHistory('assistant', welcome)
+        } else {
+          history.forEach(msg => appendMessage(msg.role, msg.content))
+        }
+      })
+
+      function appendMessage(role, content) {
+        const alignment = role === 'user' ? 'text-right bg-blue-100' : 'text-left bg-gray-200'
+        $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
+        $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
+      }
+
+      function addToHistory(role, content) {
+        history.push({ role, content })
+        localStorage.setItem('ajdChatHistory', JSON.stringify(history))
+      }
+
+      function clearChat() {
+        history = []
+        localStorage.removeItem('ajdChatHistory')
+        $('#chatLog').empty()
+        const welcome = translations[currentLang].welcome
+        appendMessage('assistant', welcome)
+        addToHistory('assistant', welcome)
+      }
+
+      $('#toggleMode').click(() => {
+        useMock = !useMock
+        const t = translations[currentLang]
+        if (useMock) {
+          $('#modeLabel').text(t.mock).removeClass('bg-purple-600').addClass('bg-green-600')
+        } else {
+          $('#modeLabel').text(t.backend).removeClass('bg-green-600').addClass('bg-purple-600')
+        }
+      })
+
+      $('#clearChat').click(clearChat)
+
+      $('#toggleLang').click(() => {
+        const newLang = currentLang === 'en' ? 'ar' : 'en'
+        setLanguage(newLang)
+        clearChat() // reset with new language welcome message
+      })
+
+      $('#sendBtn').click(sendMessage)
+      $('#chatInput').keypress(e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
+          sendMessage()
+        }
+      })
+
+      function sendMessage() {
+        const text = $('#chatInput').val().trim()
+        if (!text) return
+        appendMessage('user', text)
+        addToHistory('user', text)
+        $('#chatInput').val('')
+
+        if (useMock) {
+          setTimeout(() => {
+            const reply = `(Mock GPT) You asked: '${text}'. In backend mode I would analyze Al Jazeera's documentary topics and compare them with your project.`
+            appendMessage('assistant', reply)
+            addToHistory('assistant', reply)
+          }, 600)
+        } else {
+          fetch(backendUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text, history })
+          })
+            .then(res => res.json())
+            .then(data => {
+              const reply = data.reply || 'No reply'
+              appendMessage('assistant', reply)
+              addToHistory('assistant', reply)
+            })
+            .catch(() => {
+              const errorMsg = currentLang === 'ar' ? 'خطأ: تعذر الاتصال بالخادم.' : 'Error: could not connect to backend server.'
+              appendMessage('assistant', errorMsg)
+              addToHistory('assistant', errorMsg)
+            })
+        }
+      }
+    </script>
+  </body>
+</html>
