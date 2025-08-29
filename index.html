@@ -10,6 +10,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
       body {
         font-family: "Cairo", sans-serif;
@@ -112,9 +113,20 @@
       })
 
       function appendMessage(role, content) {
-        const alignment = role === 'user' ? 'text-right bg-white text-gray-900' : 'text-left bg-gray-700 text-white'
-        $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
-        $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
+        const alignment = role === 'user' ? 'text-right bg-white text-gray-900' : 'text-left bg-gray-700 text-white';
+
+          // Parse markdown and sanitise HTML
+  const htmlContent = marked.parse(content);
+
+          $('#chatLog').append(
+    `<div class="p-2 rounded-lg ${alignment}">` +
+    `<div style="white-space: pre-wrap">${htmlContent}</div>` +
+    `</div>`
+  );
+  $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
+        
+        // $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
+        // $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
       }
 
       function addToHistory(role, content) {
