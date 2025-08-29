@@ -4,15 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Al Jazeera Documentary Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+      body {
+        font-family: "Cairo", sans-serif;
+      }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .scrollbar-thin {
+    -ms-overflow-style: thin;
+    scrollbar-width: thin;
   }
 </style>
   </head>
@@ -30,7 +42,7 @@
     </div>
 
     <div class="max-w-3xl mx-auto flex-1 flex flex-col min-h-0">
-      <div id="chatLog" class="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-3 space-y-2 scrollbar-hide"></div>
+      <div id="chatLog" class="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-3 space-y-2 scrollbar-thin"></div>
   
       <div class="flex mt-3">
         <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none bg-gray-600 text-white" rows="2"></textarea>
@@ -101,7 +113,7 @@
       })
 
       function appendMessage(role, content) {
-        const alignment = role === 'user' ? 'text-right bg-gray-900 text-white' : 'text-left bg-gray-700 text-white'
+        const alignment = role === 'user' ? 'text-right bg-white text-gray-900' : 'text-left bg-gray-700 text-white'
         $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
         $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
       }
