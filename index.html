@@ -164,7 +164,18 @@
         addToHistory('user', text)
         $('#chatInput').val('')
 
+          // Add loading message
+  const loadingId = 'loading-' + Date.now()
+  const loadingMsg = currentLang === 'ar' 
+    ? '...يبحث، الرجاء الانتظار' 
+    : 'Searching, please wait...'
+  $('#chatLog').append(`<div id="${loadingId}" class="p-2 rounded-lg text-left bg-gray-200">${loadingMsg}</div>`)
+  $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
+        
         if (useMock) {
+                // Remove loading message
+      $(`#${loadingId}`).remove()
+      
           setTimeout(() => {
             const reply = `(Mock GPT) You asked: '${text}'. In backend mode I would analyze Al Jazeera's documentary topics and compare them with your project.`
             appendMessage('assistant', reply)
@@ -178,11 +189,17 @@
           })
             .then(res => res.json())
             .then(data => {
+                      // Remove loading message
+        $(`#${loadingId}`).remove()
+              
               const reply = data.reply || 'No reply'
               appendMessage('assistant', reply)
               addToHistory('assistant', reply)
             })
             .catch(() => {
+                      // Remove loading message
+        $(`#${loadingId}`).remove()
+              
               const errorMsg = currentLang === 'ar' ? 'خطأ: تعذر الاتصال بالخادم.' : 'Error: could not connect to backend server.'
               appendMessage('assistant', errorMsg)
               addToHistory('assistant', errorMsg)
