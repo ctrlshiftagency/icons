@@ -32,8 +32,8 @@
     <div class="max-w-3xl mx-auto flex-1 flex flex-col min-h-0">
       <div id="chatLog" class="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-3 space-y-2 scrollbar-hide"></div>
   
-      <div class="flex-none mt-3">
-        <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none" rows="2"></textarea>
+      <div class="flex mt-3">
+        <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none bg-gray-600 text-white" rows="2"></textarea>
         <button id="sendBtn" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">Send</button>
       </div>
       
@@ -101,7 +101,7 @@
       })
 
       function appendMessage(role, content) {
-        const alignment = role === 'user' ? 'text-right bg-blue-600 text-white' : 'text-left bg-gray-700 text-white'
+        const alignment = role === 'user' ? 'text-right bg-gray-900 text-white' : 'text-left bg-gray-700 text-white'
         $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
         $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
       }
