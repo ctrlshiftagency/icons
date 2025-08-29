@@ -27,12 +27,16 @@
       </div>
     </div>
 
-    <div id="chatLog" class="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-3 space-y-2 max-w-3xl mx-auto scrollbar-hide"></div>
+    <div class="max-w-3xl mx-auto flex-1 flex flex-col">
+    <div id="chatLog" class="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-3 space-y-2 scrollbar-hide"></div>
 
-    <div class="flex mt-3 max-w-3xl mx-auto"">
+    <div class="flex mt-3">
       <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none" rows="2"></textarea>
       <button id="sendBtn" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">Send</button>
     </div>
+      
+    </div>
+
 
     <script>
       let useMock = true
