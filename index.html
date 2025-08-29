@@ -4,54 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Al Jazeera Documentary Chat</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
       body {
-        font-family: "Cairo", sans-serif;
+        font-family: 'Cairo', sans-serif;
       }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
 
-  .scrollbar-thin {
-    -ms-overflow-style: thin;
-    scrollbar-width: thin;
-  }
-</style>
+      .scrollbar-thin {
+        -ms-overflow-style: thin;
+        scrollbar-width: thin;
+      }
+    </style>
   </head>
   <body class="flex flex-col h-screen p-4 bg-gray-900" id="pageBody" dir="ltr">
     <div class="flex-none">
-    <div class="flex justify-between items-center mb-4 px-4 py-3 bg-gray-800">
-      <h1 class="text-xl font-bold text-white" id="title">Al Jazeera Documentary Chat</h1>
-      <div class="flex items-center gap-3">
-<!--         <span id="modeLabel" class="px-2 py-1 rounded text-white text-sm bg-green-600">Mock Mode</span> -->
-<!--         <button id="toggleMode" class="px-3 py-1 rounded-lg border bg-white text-sm">Toggle</button> -->
-        <button id="clearChat" class="px-3 py-1 rounded-lg bg-red-500 text-white text-sm">Clear Chat</button>
-        <button id="toggleLang" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-sm">عربي</button>
+      <div class="flex justify-between items-center mb-4 px-4 py-3 bg-gray-800">
+        <h1 class="text-xl font-bold text-white" id="title">Al Jazeera Documentary Chat</h1>
+        <div class="flex items-center gap-3">
+          <!--         <span id="modeLabel" class="px-2 py-1 rounded text-white text-sm bg-green-600">Mock Mode</span> -->
+          <!--         <button id="toggleMode" class="px-3 py-1 rounded-lg border bg-white text-sm">Toggle</button> -->
+          <button id="clearChat" class="px-3 py-1 rounded-lg bg-red-500 text-white text-sm">Clear Chat</button>
+          <button id="toggleLang" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-sm">عربي</button>
+        </div>
       </div>
-    </div>
     </div>
 
     <div class="max-w-3xl mx-auto flex-1 flex flex-col min-h-0">
       <div id="chatLog" class="flex-1 overflow-y-auto rounded-lg p-3 space-y-4 scrollbar-thin"></div>
-  
+
       <div class="flex mt-3">
         <textarea id="chatInput" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 resize-none bg-gray-600 text-white" rows="2"></textarea>
         <button id="sendBtn" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">Send</button>
       </div>
-      
     </div>
-
 
     <script>
       let useMock = false
@@ -113,18 +111,14 @@
       })
 
       function appendMessage(role, content) {
-        const alignment = role === 'user' ? 'text-right bg-white text-gray-900' : 'text-left bg-gray-700 text-white';
+        const alignment = role === 'user' ? 'text-right bg-white text-gray-900' : 'text-left bg-gray-700 text-white'
 
-          // Parse markdown and sanitise HTML
-  const htmlContent = marked.parse(content);
+        // Parse markdown and sanitise HTML
+        const htmlContent = marked.parse(content)
 
-          $('#chatLog').append(
-    `<div class="p-5 rounded-lg ${alignment}">` +
-    `<div style="white-space: pre-wrap">${htmlContent}</div>` +
-    `</div>`
-  );
-  $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
-        
+        $('#chatLog').append(`<div class="p-5 rounded-lg ${alignment}">` + `<div style="white-space: pre-wrap">${htmlContent}</div>` + `</div>`)
+        $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
+
         // $('#chatLog').append(`<div class="p-2 rounded-lg ${alignment}"><div style="white-space: pre-wrap">${content}</div></div>`)
         // $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
       }
@@ -176,18 +170,16 @@
         addToHistory('user', text)
         $('#chatInput').val('')
 
-          // Add loading message
-  const loadingId = 'loading-' + Date.now()
-  const loadingMsg = currentLang === 'ar' 
-    ? '...يبحث، الرجاء الانتظار' 
-    : 'Searching, please wait...'
-  $('#chatLog').append(`<div id="${loadingId}" class="p-2 rounded-lg text-left bg-gray-200">${loadingMsg}</div>`)
-  $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
-        
+        // Add loading message
+        const loadingId = 'loading-' + Date.now()
+        const loadingMsg = currentLang === 'ar' ? '...يبحث، الرجاء الانتظار' : 'Searching, please wait...'
+        $('#chatLog').append(`<div id="${loadingId}" class="p-2 rounded-lg text-left bg-gray-200">${loadingMsg}</div>`)
+        $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight)
+
         if (useMock) {
-                // Remove loading message
-      $(`#${loadingId}`).remove()
-      
+          // Remove loading message
+          $(`#${loadingId}`).remove()
+
           setTimeout(() => {
             const reply = `(Mock GPT) You asked: '${text}'. In backend mode I would analyze Al Jazeera's documentary topics and compare them with your project.`
             appendMessage('assistant', reply)
@@ -201,17 +193,17 @@
           })
             .then(res => res.json())
             .then(data => {
-                      // Remove loading message
-        $(`#${loadingId}`).remove()
-              
+              // Remove loading message
+              $(`#${loadingId}`).remove()
+
               const reply = data.reply || 'No reply'
               appendMessage('assistant', reply)
               addToHistory('assistant', reply)
             })
             .catch(() => {
-                      // Remove loading message
-        $(`#${loadingId}`).remove()
-              
+              // Remove loading message
+              $(`#${loadingId}`).remove()
+
               const errorMsg = currentLang === 'ar' ? 'خطأ: تعذر الاتصال بالخادم.' : 'Error: could not connect to backend server.'
               appendMessage('assistant', errorMsg)
               addToHistory('assistant', errorMsg)
