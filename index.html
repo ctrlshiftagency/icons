@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Al Jazeera Documentary Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      /* Default light theme */
+      :root {
+        --primary-color: #1a73e8;
+        --secondary-color: #f8f9fa;
+        --text-color: #202124;
+        --border-color: #dadce0;
+        --user-msg-bg: #e3f2fd;
+        --ai-msg-bg: #f5f5f5;
+        --sidebar-width: 260px;
+        --header-height: 60px;
+        --bg-color: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+      }
+
+      /* Light theme variations */
+      :root.light-blue-theme {
+        --primary-color: #1a73e8;
+        --secondary-color: #f8f9fa;
+        --text-color: #202124;
+        --border-color: #dadce0;
+        --user-msg-bg: #e3f2fd;
+        --ai-msg-bg: #f5f5f5;
+        --bg-color: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+      }
+
+      :root.light-green-theme {
+        --primary-color: #0f9d58;
+        --secondary-color: #f0f9f4;
+        --text-color: #202124;
+        --border-color: #dadce0;
+        --user-msg-bg: #e0f2e9;
+        --ai-msg-bg: #f5f5f5;
+        --bg-color: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+      }
+
+      :root.light-purple-theme {
+        --primary-color: #9334e6;
+        --secondary-color: #f6f2fb;
+        --text-color: #202124;
+        --border-color: #dadce0;
+        --user-msg-bg: #f0e5fb;
+        --ai-msg-bg: #f5f5f5;
+        --bg-color: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+      }
+
+      :root.light-orange-theme {
+        --primary-color: #fa7b17;
+        --secondary-color: #fef6f0;
+        --text-color: #202124;
+        --border-color: #dadce0;
+        --user-msg-bg: #feeadc;
+        --ai-msg-bg: #f5f5f5;
+        --bg-color: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+      }
+
+      /* Dark theme variations */
+      :root.dark-blue-theme {
+        --primary-color: #8ab4f8;
+        --secondary-color: #303134;
+        --text-color: #e8eaed;
+        --border-color: #5f6368;
+        --user-msg-bg: #174ea6;
+        --ai-msg-bg: #3c4043;
+        --bg-color: #202124;
+        --header-bg: #202124;
+        --input-bg: #303134;
+      }
+
+      :root.dark-green-theme {
+        --primary-color: #81c995;
+        --secondary-color: #303134;
+        --text-color: #e8eaed;
+        --border-color: #5f6368;
+        --user-msg-bg: #0f5d34;
+        --ai-msg-bg: #3c4043;
+        --bg-color: #202124;
+        --header-bg: #202124;
+        --input-bg: #303134;
+      }
+
+      :root.dark-purple-theme {
+        --primary-color: #c58af9;
+        --secondary-color: #303134;
+        --text-color: #e8eaed;
+        --border-color: #5f6368;
+        --user-msg-bg: #5b21b6;
+        --ai-msg-bg: #3c4043;
+        --bg-color: #202124;
+        --header-bg: #202124;
+        --input-bg: #303134;
+      }
+
+      :root.dark-orange-theme {
+        --primary-color: #fcad70;
+        --secondary-color: #303134;
+        --text-color: #e8eaed;
+        --border-color: #5f6368;
+        --user-msg-bg: #9a4313;
+        --ai-msg-bg: #3c4043;
+        --bg-color: #202124;
+        --header-bg: #202124;
+        --input-bg: #303134;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        scrollbar-width: none; /* Firefox */
+        -webkit-text-size-adjust: 100%; /* Prevent font scaling in iOS when rotating/focusing */
+      }
+
+      *::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
+      }
+
+      body {
+        font-family: 'Cairo', sans-serif;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        line-height: 1.6;
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        touch-action: manipulation; /* Prevent double-tap zoom */
+      }
+
+      body[dir='rtl'] .sidebar {
+        left: auto;
+        right: 0;
+        border-right: none;
+        border-left: 1px solid var(--border-color);
+      }
+
+      body[dir='rtl'] .main-content {
+        /* Margins will be handled by handleResponsiveLayout function */
+      }
+
+      .sidebar {
+        width: var(--sidebar-width);
+        height: 100vh;
+        background-color: var(--secondary-color);
+        position: fixed;
+        top: 0;
+        left: 0;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        z-index: 100;
+      }
+
+      /* Mini sidebar that appears when main sidebar is hidden */
+      .mini-sidebar {
+        width: 60px;
+        height: 100vh;
+        background-color: var(--secondary-color);
+        position: fixed;
+        top: 0;
+        left: 0;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 0;
+        z-index: 99;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+      }
+
+      body[dir='rtl'] .mini-sidebar {
+        left: auto;
+        right: 0;
+        border-right: none;
+        border-left: 1px solid var(--border-color);
+      }
+
+      .mini-sidebar-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        background-color: transparent;
+        color: var(--text-color);
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .mini-sidebar-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .mini-sidebar-logo {
+        font-size: 24px;
+        color: var(--primary-color);
+        margin-bottom: 30px;
+      }
+
+      .sidebar-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .new-chat-btn {
+        width: 100%;
+        padding: 10px 16px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: 'Cairo', sans-serif;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background-color 0.2s;
+      }
+
+      .new-chat-btn:hover {
+        background-color: #1765cc;
+      }
+
+      .chat-history {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      }
+
+      .chat-item {
+        padding: 10px 16px;
+        margin-bottom: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        position: relative;
+        user-select: none; /* Prevent text selection */
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE/Edge */
+      }
+
+      @keyframes longPressAnimation {
+        0% {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+        100% {
+          background-color: rgba(0, 0, 0, 0.15);
+        }
+      }
+
+      .long-press-active {
+        animation: longPressAnimation 0.5s forwards;
+      }
+
+      .chat-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        flex-grow: 1;
+      }
+
+      .chat-actions {
+        position: relative;
+        cursor: pointer;
+      }
+
+      .chat-item:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .chat-item.active {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      .chat-menu-toggle {
+        opacity: 0;
+        transition: all 0.2s ease;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: transparent;
+      }
+
+      /* Show menu toggle on hover for non-touch devices */
+      .chat-item:hover .chat-menu-toggle {
+        opacity: 0.9;
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .chat-item .chat-menu-toggle:hover {
+        opacity: 1;
+        background-color: rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+      }
+
+      /* Always show menu toggle on touch devices */
+      .touch-device .chat-menu-toggle {
+        opacity: 0.9;
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .chat-menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .chat-menu-item:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .chat-menu-item.delete-chat {
+        color: #e53935;
+      }
+
+      .chat-menu-item i {
+        margin-right: 8px;
+      }
+
+      .chat-menu {
+        z-index: 1000; /* Ensure menu appears above other elements */
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: var(--secondary-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        min-width: 120px;
+        width: max-content;
+      }
+
+      body[dir='rtl'] .chat-menu {
+        right: auto;
+        left: 0;
+      }
+
+      body[dir='rtl'] .chat-menu-item i {
+        margin-right: 0;
+        margin-left: 8px;
+      }
+
+      body[dir='rtl'] small {
+        margin-right: 0;
+        margin-left: 8px;
+      }
+
+      .sidebar-footer {
+        padding: 16px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .sidebar-footer-row {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* Theme selector container */
+      .theme-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      /* Theme option squares */
+      .theme-option {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .theme-option:hover {
+        transform: scale(1.1);
+      }
+
+      .theme-option.active {
+        border-color: var(--text-color);
+      }
+
+      /* Light theme colors */
+      .theme-light-blue {
+        background-color: #1a73e8;
+      }
+
+      .theme-light-green {
+        background-color: #0f9d58;
+      }
+
+      .theme-light-purple {
+        background-color: #9334e6;
+      }
+
+      .theme-light-orange {
+        background-color: #fa7b17;
+      }
+
+      /* Dark theme colors */
+      .theme-dark-blue {
+        background-color: #8ab4f8;
+      }
+
+      .theme-dark-green {
+        background-color: #81c995;
+      }
+
+      .theme-dark-purple {
+        background-color: #c58af9;
+      }
+
+      .theme-dark-orange {
+        background-color: #fcad70;
+      }
+
+      .sidebar-btn {
+        font-family: 'Cairo', sans-serif;
+        color: var(--text-color);
+        padding: 8px 12px;
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .sidebar-btn i,
+      .menu-toggle i {
+        color: var(--text-color);
+        transition: color 0.3s ease;
+      }
+
+      .sidebar-btn:not(#themeToggle) i {
+        margin-right: 8px;
+      }
+
+      body[dir='rtl'] .sidebar-btn:not(#themeToggle) i {
+        margin-right: 0;
+        margin-left: 8px;
+      }
+
+      .sidebar-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .main-content {
+        flex: 1;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: margin 0.3s ease, transform 0.3s ease;
+      }
+
+      .content-container {
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .chat-header {
+        height: var(--header-height);
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--header-bg);
+        width: 100%;
+        transition: background-color 0.3s ease;
+      }
+
+      .menu-toggle {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: var(--text-color);
+      }
+
+      #chatLog {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        width: 100%;
+      }
+
+      .message {
+        max-width: 100%;
+        padding: 25px 25px 0px 25px;
+        border-radius: 8px;
+        position: relative;
+        animation: fadeIn 0.3s;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      li {
+        list-style: square inside;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .user-message {
+        align-self: flex-end;
+        background-color: var(--user-msg-bg);
+        color: var(--text-color);
+      }
+
+      .assistant-message {
+        align-self: flex-start;
+        background-color: var(--ai-msg-bg);
+      }
+
+      .message-content {
+        white-space: pre-wrap;
+      }
+
+      .message-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        position: absolute;
+        bottom: -5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+      }
+
+      .user-avatar {
+        background-color: #1a73e8;
+        right: -10px;
+      }
+
+      .assistant-avatar {
+        background-color: #34a853;
+        left: -10px;
+      }
+
+      .chat-input-container {
+        padding: 16px;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--header-bg);
+        width: 100%;
+        transition: background-color 0.3s ease;
+      }
+
+      .chat-form {
+        display: flex;
+        gap: 10px;
+        font-size: 16px; /* Prevent zoom on iOS */
+      }
+
+      #chatInput {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        resize: none;
+        font-family: inherit;
+        font-size: 16px; /* Use at least 16px to prevent zoom on iOS */
+        outline: none;
+        transition: border-color 0.2s, height 0.1s ease;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        min-height: 48px;
+        max-height: 200px;
+        overflow-y: auto;
+        -webkit-appearance: none; /* Remove default iOS styling */
+      }
+
+      #chatInput:focus {
+        border-color: var(--primary-color);
+      }
+
+      #sendBtn {
+        padding: 0 16px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #sendBtn:hover {
+        background-color: #1765cc;
+      }
+
+      #sendBtn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Desktop sidebar toggle button */
+      .sidebar-toggle {
+        position: absolute;
+        top: 30px;
+        transform: translateY(-50%);
+        background-color: var(--secondary-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0;
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        color: var(--text-color);
+        display: none; /* Hidden by default, shown on desktop */
+        z-index: 101;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      body[dir='rtl'] .sidebar-toggle {
+        right: auto;
+        left: -15px;
+      }
+
+      body[dir='rtl'] .mini-sidebar-btn i.fa-chevron-right {
+        transform: rotate(180deg);
+      }
+
+      body[dir='rtl'] .sidebar-toggle i.fa-chevron-left {
+        transform: rotate(180deg);
+      }
+
+      /* Responsive styles */
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          width: 280px; /* Increased sidebar width on mobile */
+        }
+
+        body[dir='rtl'] .sidebar {
+          transform: translateX(100%);
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          /* Margins and width will be handled by handleResponsiveLayout function */
+        }
+
+        body[dir='rtl'] .main-content {
+          /* Margins and width will be handled by handleResponsiveLayout function */
+        }
+
+        .menu-toggle {
+          display: block;
+        }
+
+        /* Hide desktop sidebar toggle on mobile */
+        .sidebar-toggle {
+          display: none;
+        }
+
+        /* Hide mini sidebar on mobile */
+        .mini-sidebar {
+          display: none;
+        }
+
+        /* Make title smaller on mobile */
+        #title {
+          font-size: 1.2rem;
+        }
+      }
+
+      /* Desktop styles */
+      @media (min-width: 769px) {
+        /* Show sidebar toggle inside sidebar */
+        .sidebar-toggle {
+          display: block;
+        }
+
+        #sidebar .sidebar-toggle {
+          left: calc(100% + 60px);
+        }
+
+        #sidebar.open .sidebar-toggle {
+          left: calc(100% - 0px);
+        }
+
+        /* Hide mobile menu toggle */
+        .menu-toggle {
+          /* display: none; */
+        }
+
+        /* Show mini sidebar when main sidebar is hidden */
+        .mini-sidebar {
+          transform: translateX(0);
+        }
+
+        /* Hide mini sidebar when main sidebar is visible */
+        .sidebar.open + .mini-sidebar {
+          transform: translateX(-100%);
+        }
+
+        body[dir='rtl'] .sidebar.open + .mini-sidebar {
+          transform: translateX(100%);
+        }
+
+        /* Adjust main content margin when mini sidebar is visible */
+        .main-content.with-mini-sidebar {
+          margin-left: 60px;
+        }
+
+        body[dir='rtl'] .main-content.with-mini-sidebar {
+          margin-left: 0;
+          margin-right: 60px;
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body id="pageBody" dir="ltr">
+    <!-- Sidebar for chat history -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-chat-btn" id="newChatBtn"><i class="fas fa-plus"></i> <span id="newChatText">New Chat</span></button>
+        <!-- Desktop sidebar toggle button -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      <div class="chat-history" id="chatHistory">
+        <!-- Chat history items will be added here -->
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-row">
+          <button class="sidebar-btn" id="clearChat"><i class="fas fa-trash"></i> <span id="clearChatText">Clear Chat</span></button>
+          <button class="sidebar-btn" id="toggleLang"><i class="fas fa-language"></i> عربي</button>
+        </div>
+        <!-- Theme selector - can be easily removed later if not needed -->
+        <div class="theme-selector" id="themeSelector">
+          <!-- Light themes -->
+          <div class="theme-option theme-light-blue" data-theme="light-blue-theme" title="Light Blue"></div>
+          <div class="theme-option theme-light-green" data-theme="light-green-theme" title="Light Green"></div>
+          <div class="theme-option theme-light-purple" data-theme="light-purple-theme" title="Light Purple"></div>
+          <div class="theme-option theme-light-orange" data-theme="light-orange-theme" title="Light Orange"></div>
+          <!-- Dark themes -->
+          <div class="theme-option theme-dark-blue" data-theme="dark-blue-theme" title="Dark Blue"></div>
+          <div class="theme-option theme-dark-green" data-theme="dark-green-theme" title="Dark Green"></div>
+          <div class="theme-option theme-dark-purple" data-theme="dark-purple-theme" title="Dark Purple"></div>
+          <div class="theme-option theme-dark-orange" data-theme="dark-orange-theme" title="Dark Orange"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini sidebar that appears when main sidebar is hidden -->
+    <div class="mini-sidebar" id="miniSidebar">
+      <div class="mini-sidebar-logo">
+        <i class="fas fa-comment-dots"></i>
+      </div>
+      <button class="mini-sidebar-btn hidden" id="miniSidebarToggle" title="Show Sidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button class="mini-sidebar-btn" id="miniNewChatBtn" title="New Chat">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main-content">
+      <div class="content-container">
+        <div class="chat-header">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 id="title">Al Jazeera Documentary Chat</h1>
+          <button id="themeToggle" class="sidebar-btn">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+
+        <div id="chatLog">
+          <!-- Messages will be added here -->
+        </div>
+
+        <div class="chat-input-container">
+          <form class="chat-form" id="chatForm">
+            <textarea id="chatInput" placeholder="Type your message..." rows="1"></textarea>
+            <button id="sendBtn" type="submit">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let useMock = false
+      const backendUrl = 'https://icons.1px.workers.dev/chat'
+      let allChats = JSON.parse(localStorage.getItem('ajdAllChats') || '[]')
+      let currentChatId = localStorage.getItem('ajdCurrentChatId') || null
+      let currentLang = localStorage.getItem('ajdChatLang') || 'en' // default English
+      let isTouchDevice = false
+
+      // Detect touch device
+      function detectTouchDevice() {
+        isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+
+        if (isTouchDevice) {
+          document.body.classList.add('touch-device')
+        }
+      }
+
+      // Call detection on page load
+      window.addEventListener('DOMContentLoaded', detectTouchDevice)
+
+      const translations = {
+        en: {
+          title: 'Al Jazeera Documentary Chat',
+          welcome: '👋 Welcome! This is Al Jazeera Documentary Explorer. You can use it to search for and determine if your next big idea has been produced by Al Jazeera before.',
+          send: 'Send',
+          clear: 'Clear All',
+          newChat: 'New Chat',
+          mock: 'Mock Mode',
+          backend: 'Backend Mode',
+          toggleLang: 'عربي',
+          placeholder: 'Type your message...',
+          noTitle: 'New Conversation',
+          rename: 'Rename',
+          delete: 'Delete',
+          confirmDelete: 'Are you sure you want to delete this chat?',
+          enterNewName: 'Enter new chat name:'
+        },
+        ar: {
+          title: 'دردشة الجزيرة الوثائقية',
+          welcome: '👋 أهلاً بك! هذا مستكشف أفلام الجزيرة الوثائقية. يمكنك استخدامه للبحث عن فكرتك السينمائية القادمة ومعرفة ما إذا كانت الجزيرة قد أنتجتها من قبل.',
+          send: 'إرسال',
+          clear: 'مسح الكل',
+          newChat: 'محادثة جديدة',
+          mock: 'وضع المحاكاة',
+          backend: 'وضع الخادم',
+          toggleLang: 'English',
+          placeholder: 'اكتب رسالتك...',
+          noTitle: 'محادثة جديدة',
+          rename: 'إعادة تسمية',
+          delete: 'حذف',
+          confirmDelete: 'هل أنت متأكد من حذف هذه المحادثة؟',
+          enterNewName: 'أدخل اسمًا جديدًا للمحادثة:'
+        }
+      }
+
+      function setLanguage(lang) {
+        currentLang = lang
+        localStorage.setItem('ajdChatLang', lang)
+        const t = translations[lang]
+
+        // Update UI text elements
+        document.getElementById('title').textContent = t.title
+        document.getElementById('clearChatText').textContent = t.clear
+        document.getElementById('newChatText').textContent = t.newChat
+        document.getElementById('toggleLang').innerHTML = `<i class="fas fa-language"></i> ${t.toggleLang}`
+        document.getElementById('chatInput').placeholder = t.placeholder
+
+        // Set text direction
+        if (lang === 'ar') {
+          document.getElementById('pageBody').setAttribute('dir', 'rtl')
+          // Update sidebar transform for RTL if it's not open
+          const sidebar = document.getElementById('sidebar')
+
+          if (!sidebar.classList.contains('open')) {
+            sidebar.style.transform = 'translateX(100%)'
+          }
+        } else {
+          document.getElementById('pageBody').setAttribute('dir', 'ltr')
+          // Update sidebar transform for LTR if it's not open
+          const sidebar = document.getElementById('sidebar')
+
+          if (!sidebar.classList.contains('open')) {
+            sidebar.style.transform = 'translateX(-100%)'
+          }
+        }
+
+        // Use the responsive layout function to handle content positioning
+        handleResponsiveLayout()
+
+        // Update chat history titles
+        updateChatHistorySidebar()
+      }
+
+      function createNewChat() {
+        const newChat = {
+          id: Date.now().toString(),
+          title: null, // Will be set after first message
+          messages: [],
+          createdAt: new Date().toISOString()
+        }
+
+        // Add welcome message
+        const welcome = translations[currentLang].welcome
+        newChat.messages.push({ role: 'assistant', content: welcome })
+
+        // Add to chats and set as current
+        allChats.unshift(newChat)
+        currentChatId = newChat.id
+
+        // Save to localStorage
+        localStorage.setItem('ajdAllChats', JSON.stringify(allChats))
+        localStorage.setItem('ajdCurrentChatId', currentChatId)
+
+        // Update UI
+        updateChatHistorySidebar()
+        loadCurrentChat()
+      }
+
+      function getCurrentChat() {
+        return allChats.find(chat => chat.id === currentChatId) || allChats[0]
+      }
+
+      function updateChatTitle(chatId, message) {
+        const chat = allChats.find(c => c.id === chatId)
+        if (chat && !chat.title && message) {
+          // Use first few words of first user message as title
+          const words = message.split(' ')
+          chat.title = words.slice(0, 3).join(' ') + (words.length > 3 ? '...' : '')
+          localStorage.setItem('ajdAllChats', JSON.stringify(allChats))
+          updateChatHistorySidebar()
+        }
+      }
+
+      function updateChatHistorySidebar() {
+        const chatHistory = document.getElementById('chatHistory')
+        chatHistory.innerHTML = ''
+        const t = translations[currentLang]
+
+        allChats.forEach(chat => {
+          const chatItem = document.createElement('div')
+          chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`
+          chatItem.dataset.chatId = chat.id
+
+          // Format date
+          const date = new Date(chat.createdAt)
+          const formattedDate = date.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', {
+            month: 'short',
+            day: 'numeric'
+          })
+
+          chatItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <span class="chat-title" data-original-title="${chat.title || t.noTitle}">${chat.title || t.noTitle}</span>
+              <div style="display: flex; align-items: center;">
+                <small style="margin-right: 8px; display: none;">${formattedDate}</small>
+                <div class="chat-actions">
+                  <i class="fas fa-ellipsis-v chat-menu-toggle" style="font-size: 14px;"></i>
+                  <div class="chat-menu" style="display: none;">
+                    <div class="chat-menu-item rename-chat">
+                      <i class="fas fa-edit"></i> <span>${t.rename}</span>
+                    </div>
+                    <div class="chat-menu-item delete-chat">
+                      <i class="fas fa-trash"></i> <span>${t.delete}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `
+
+          // Variables for long press detection
+          let touchStartTime = 0
+          let touchTimeout
+          let startX = 0
+          let startY = 0
+          const longPressDuration = 500 // ms
+          const moveThreshold = 10 // pixels
+
+          // Touch start event for long press detection
+          chatItem.addEventListener('touchstart', e => {
+            // Don't trigger on menu elements
+            if (e.target.closest('.chat-menu-toggle') || e.target.closest('.chat-menu')) {
+              return
+            }
+
+            touchStartTime = Date.now()
+            startX = e.touches[0].clientX
+            startY = e.touches[0].clientY
+
+            // Add visual feedback class
+            chatItem.classList.add('long-press-active')
+
+            // Set timeout for long press
+            touchTimeout = setTimeout(() => {
+              // Show menu on long press
+              const menu = chatItem.querySelector('.chat-menu')
+              // Close all other menus first
+              document.querySelectorAll('.chat-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none'
+              })
+              // Toggle this menu
+              menu.style.display = 'block'
+
+              // Vibrate if available for haptic feedback
+              if (navigator.vibrate) {
+                navigator.vibrate(50)
+              }
+            }, longPressDuration)
+          })
+
+          // Cancel long press on move
+          chatItem.addEventListener('touchmove', e => {
+            const moveX = Math.abs(e.touches[0].clientX - startX)
+            const moveY = Math.abs(e.touches[0].clientY - startY)
+
+            // If moved more than threshold, cancel long press
+            if (moveX > moveThreshold || moveY > moveThreshold) {
+              clearTimeout(touchTimeout)
+              chatItem.classList.remove('long-press-active')
+            }
+          })
+
+          // Cancel long press on touch end
+          chatItem.addEventListener('touchend', e => {
+            clearTimeout(touchTimeout)
+            chatItem.classList.remove('long-press-active')
+
+            // If it was a short tap and not on menu elements, handle as click
+            const touchDuration = Date.now() - touchStartTime
+            if (touchDuration < longPressDuration && !e.target.closest('.chat-menu-toggle') && !e.target.closest('.chat-menu')) {
+              if (chat.id !== currentChatId) {
+                currentChatId = chat.id
+                localStorage.setItem('ajdCurrentChatId', currentChatId)
+                updateChatHistorySidebar()
+                loadCurrentChat()
+              }
+            }
+          })
+
+          // Also cancel on touch cancel
+          chatItem.addEventListener('touchcancel', () => {
+            clearTimeout(touchTimeout)
+            chatItem.classList.remove('long-press-active')
+          })
+
+          // Main click event for the chat item (for non-touch devices)
+          chatItem.addEventListener('click', e => {
+            // Ignore clicks on the menu toggle or menu items
+            if (e.target.closest('.chat-menu-toggle') || e.target.closest('.chat-menu') || isTouchDevice) {
+              return
+            }
+
+            if (chat.id !== currentChatId) {
+              currentChatId = chat.id
+              localStorage.setItem('ajdCurrentChatId', currentChatId)
+              updateChatHistorySidebar()
+              loadCurrentChat()
+            }
+          })
+
+          // Setup menu toggle
+          const menuToggle = chatItem.querySelector('.chat-menu-toggle')
+          const chatMenu = chatItem.querySelector('.chat-menu')
+
+          menuToggle.addEventListener('click', e => {
+            e.stopPropagation()
+            // Close all other menus first
+            document.querySelectorAll('.chat-menu').forEach(menu => {
+              if (menu !== chatMenu) menu.style.display = 'none'
+            })
+            // Toggle this menu
+            chatMenu.style.display = chatMenu.style.display === 'none' ? 'block' : 'none'
+          })
+
+          // Setup rename action
+          const renameAction = chatItem.querySelector('.rename-chat')
+          const chatTitleElement = chatItem.querySelector('.chat-title')
+
+          renameAction.addEventListener('click', e => {
+            e.stopPropagation()
+            chatMenu.style.display = 'none'
+
+            // Save current title
+            const currentTitle = chatTitleElement.textContent
+
+            // Create input element for inline editing
+            const inputElement = document.createElement('input')
+            inputElement.type = 'text'
+            inputElement.value = currentTitle
+            inputElement.className = 'chat-title-input'
+            inputElement.style.width = '100%'
+            inputElement.style.border = '1px solid var(--primary-color)'
+            inputElement.style.borderRadius = '4px'
+            inputElement.style.padding = '2px 4px'
+            inputElement.style.outline = 'none'
+            inputElement.style.backgroundColor = 'var(--secondary-color)'
+            inputElement.style.color = 'var(--text-color)'
+            inputElement.style.fontFamily = 'inherit'
+            inputElement.style.fontSize = 'inherit'
+
+            // Replace span with input
+            chatTitleElement.parentNode.replaceChild(inputElement, chatTitleElement)
+            inputElement.focus()
+            inputElement.select()
+
+            // Handle save on enter or blur
+            const saveTitle = () => {
+              const newTitle = inputElement.value.trim()
+              if (newTitle !== '') {
+                chat.title = newTitle
+                localStorage.setItem('ajdAllChats', JSON.stringify(allChats))
+                updateChatHistorySidebar()
+              } else {
+                // If empty, revert to original title
+                updateChatHistorySidebar()
+              }
+            }
+
+            inputElement.addEventListener('keydown', e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                inputElement.blur()
+              } else if (e.key === 'Escape') {
+                e.preventDefault()
+                updateChatHistorySidebar() // Revert changes
+              }
+            })
+
+            inputElement.addEventListener('blur', saveTitle)
+
+            // Prevent clicks on the input from triggering chat selection
+            inputElement.addEventListener('click', e => {
+              e.stopPropagation()
+            })
+          })
+
+          // Setup delete action
+          const deleteAction = chatItem.querySelector('.delete-chat')
+          deleteAction.addEventListener('click', e => {
+            e.stopPropagation()
+            chatMenu.style.display = 'none'
+            const confirmDelete = confirm(t.confirmDelete)
+            if (confirmDelete) {
+              // Remove chat from array
+              const chatIndex = allChats.findIndex(c => c.id === chat.id)
+              if (chatIndex > -1) {
+                allChats.splice(chatIndex, 1)
+
+                // If we deleted the current chat, switch to another one
+                if (chat.id === currentChatId) {
+                  currentChatId = allChats.length > 0 ? allChats[0].id : null
+                  localStorage.setItem('ajdCurrentChatId', currentChatId)
+
+                  // If no chats left, create a new one
+                  if (allChats.length === 0) {
+                    createNewChat()
+                    return
+                  } else {
+                    loadCurrentChat()
+                  }
+                }
+
+                localStorage.setItem('ajdAllChats', JSON.stringify(allChats))
+                updateChatHistorySidebar()
+              }
+            }
+          })
+
+          chatHistory.appendChild(chatItem)
+        })
+      }
+
+      function loadCurrentChat() {
+        const chat = getCurrentChat()
+        document.getElementById('chatLog').innerHTML = ''
+
+        if (chat && chat.messages) {
+          chat.messages.forEach(msg => appendMessage(msg.role, msg.content))
+        }
+      }
+
+      // Function to handle responsive layout
+      function handleResponsiveLayout() {
+        const sidebar = document.getElementById('sidebar')
+        const miniSidebar = document.getElementById('miniSidebar')
+        const mainContent = document.querySelector('.main-content')
+        const contentContainer = document.querySelector('.content-container')
+        const isMobile = window.innerWidth <= 768
+        const isRTL = document.getElementById('pageBody').getAttribute('dir') === 'rtl'
+
+        // On desktop, sidebar should be open by default only on initial page load
+        // We'll use a flag in localStorage to track if the page has been loaded before
+        const initialPageLoad = !localStorage.getItem('ajdInitialLoadComplete') || localStorage.getItem('ajdInitialLoadComplete') === 'false'
+
+        if (!isMobile && initialPageLoad) {
+          sidebar.classList.add('open')
+          sidebar.style.transform = 'translateX(0)'
+          localStorage.setItem('ajdInitialLoadComplete', 'true')
+        }
+
+        const sidebarOpen = sidebar.classList.contains('open')
+
+        // Default: remove margins for all cases
+        mainContent.style.marginLeft = '0'
+        mainContent.style.marginRight = '0'
+
+        if (isMobile) {
+          // Mobile layout
+          if (!sidebarOpen) {
+            // Center content on mobile when sidebar is closed
+            mainContent.style.margin = '0 auto'
+            mainContent.style.width = '100%'
+            contentContainer.style.maxWidth = '100%'
+          }
+
+          // Hide mini sidebar on mobile
+          miniSidebar.style.display = 'none'
+
+          // Update RTL direction for sidebar on mobile
+          if (isRTL) {
+            sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(100%)'
+          } else {
+            sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)'
+          }
+        } else {
+          // Desktop layout
+          mainContent.style.width = ''
+          contentContainer.style.maxWidth = ''
+
+          // Show/hide mini sidebar based on main sidebar state
+          miniSidebar.style.display = 'flex'
+
+          if (sidebarOpen) {
+            // Main sidebar is visible
+            if (isRTL) {
+              mainContent.style.marginRight = 'var(--sidebar-width)'
+              mainContent.style.marginLeft = '0'
+              miniSidebar.style.transform = 'translateX(100%)' // Hide mini sidebar
+            } else {
+              mainContent.style.marginLeft = 'var(--sidebar-width)'
+              mainContent.style.marginRight = '0'
+              miniSidebar.style.transform = 'translateX(-100%)' // Hide mini sidebar
+            }
+            mainContent.classList.remove('with-mini-sidebar')
+          } else {
+            // Main sidebar is hidden, show mini sidebar
+            if (isRTL) {
+              mainContent.style.marginRight = '60px' // Mini sidebar width
+              mainContent.style.marginLeft = '0'
+              miniSidebar.style.transform = 'translateX(0)'
+            } else {
+              mainContent.style.marginLeft = '60px' // Mini sidebar width
+              mainContent.style.marginRight = '0'
+              miniSidebar.style.transform = 'translateX(0)'
+            }
+            mainContent.classList.add('with-mini-sidebar')
+          }
+
+          // Update RTL direction for sidebar on desktop
+          if (isRTL) {
+            sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(100%)'
+          } else {
+            sidebar.style.transform = sidebarOpen ? 'translateX(0)' : 'translateX(-100%)'
+          }
+
+          // Update sidebar toggle icon direction based on sidebar state and RTL
+          const sidebarToggleIcon = document.querySelector('#sidebarToggle i')
+          if (isRTL) {
+            sidebarToggleIcon.className = sidebarOpen ? 'fas fa-chevron-right' : 'fas fa-chevron-left'
+          } else {
+            sidebarToggleIcon.className = sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-chevron-right'
+          }
+        }
+      }
+
+      // Close all chat menus when clicking or touching outside
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.chat-menu') && !e.target.closest('.chat-menu-toggle')) {
+          document.querySelectorAll('.chat-menu').forEach(menu => {
+            menu.style.display = 'none'
+          })
+        }
+      })
+
+      // Also handle touch events for mobile
+      document.addEventListener('touchstart', e => {
+        if (!e.target.closest('.chat-menu') && !e.target.closest('.chat-menu-toggle')) {
+          document.querySelectorAll('.chat-menu').forEach(menu => {
+            menu.style.display = 'none'
+          })
+        }
+      })
+
+      // Load existing messages from localStorage
+      document.addEventListener('DOMContentLoaded', () => {
+        // Check if we should restore sidebar state from localStorage for desktop
+        const isMobile = window.innerWidth <= 768
+        const savedSidebarState = localStorage.getItem('ajdSidebarOpen')
+
+        if (!isMobile && savedSidebarState !== null) {
+          // Use saved state for desktop
+          const sidebar = document.getElementById('sidebar')
+          if (savedSidebarState === 'true') {
+            sidebar.classList.add('open')
+          } else {
+            sidebar.classList.remove('open')
+          }
+        } else {
+          // For first time load or mobile
+          localStorage.setItem('ajdInitialLoadComplete', 'false')
+        }
+
+        // Initialize with a default chat if none exists
+        if (allChats.length === 0) {
+          createNewChat()
+        } else if (!currentChatId || !allChats.find(chat => chat.id === currentChatId)) {
+          currentChatId = allChats[0].id
+          localStorage.setItem('ajdCurrentChatId', currentChatId)
+        }
+
+        setLanguage(currentLang)
+        updateChatHistorySidebar()
+        loadCurrentChat()
+
+        // Initial layout handling
+        handleResponsiveLayout()
+
+        // Handle window resize
+        window.addEventListener('resize', handleResponsiveLayout)
+
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', e => {
+          e.stopPropagation()
+          toggleSidebar()
+        })
+
+        // Desktop sidebar toggle (inside sidebar)
+        document.getElementById('sidebarToggle').addEventListener('click', e => {
+          e.stopPropagation()
+          toggleSidebar()
+        })
+
+        // Mini sidebar toggle
+        document.getElementById('miniSidebarToggle').addEventListener('click', e => {
+          e.stopPropagation()
+          toggleSidebar()
+        })
+
+        // Mini sidebar new chat button
+        document.getElementById('miniNewChatBtn').addEventListener('click', e => {
+          e.stopPropagation()
+          createNewChat()
+          toggleSidebar(true) // Force open sidebar
+        })
+
+        // Function to toggle sidebar visibility
+        function toggleSidebar(forceOpen = false) {
+          const sidebar = document.getElementById('sidebar')
+
+          if (forceOpen) {
+            sidebar.classList.add('open')
+          } else {
+            sidebar.classList.toggle('open')
+          }
+
+          // Use the responsive layout function to handle content positioning
+          handleResponsiveLayout()
+
+          // Save sidebar state for desktop
+          if (window.innerWidth > 768) {
+            localStorage.setItem('ajdSidebarOpen', sidebar.classList.contains('open'))
+          }
+        }
+
+        // Close sidebar when clicking outside of it on mobile only
+        document.addEventListener('click', e => {
+          const sidebar = document.getElementById('sidebar')
+          const isMobile = window.innerWidth <= 768
+
+          // Only close sidebar on outside click for mobile devices
+          if (isMobile && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target.id !== 'menuToggle') {
+            sidebar.classList.remove('open')
+
+            // Apply correct transform based on text direction
+            const isRTL = document.getElementById('pageBody').getAttribute('dir') === 'rtl'
+            sidebar.style.transform = isRTL ? 'translateX(100%)' : 'translateX(-100%)'
+
+            // Use the responsive layout function to handle content positioning
+            handleResponsiveLayout()
+          }
+        })
+
+        // Theme management functions
+        function setTheme(themeName) {
+          // Remove all theme classes
+          document.documentElement.classList.remove('light-blue-theme', 'light-green-theme', 'light-purple-theme', 'light-orange-theme', 'dark-blue-theme', 'dark-green-theme', 'dark-purple-theme', 'dark-orange-theme')
+
+          // Add the selected theme class
+          document.documentElement.classList.add(themeName)
+
+          // Update the theme toggle icon based on dark/light theme
+          const themeIcon = document.querySelector('#themeToggle i')
+          const isDarkTheme = themeName.startsWith('dark-')
+
+          if (isDarkTheme) {
+            themeIcon.classList.remove('fa-moon')
+            themeIcon.classList.add('fa-sun')
+          } else {
+            themeIcon.classList.remove('fa-sun')
+            themeIcon.classList.add('fa-moon')
+          }
+
+          // Save the theme preference
+          localStorage.setItem('ajdTheme', themeName)
+
+          // Update active state on theme options
+          document.querySelectorAll('.theme-option').forEach(option => {
+            if (option.dataset.theme === themeName) {
+              option.classList.add('active')
+            } else {
+              option.classList.remove('active')
+            }
+          })
+        }
+
+        // Theme toggle button - toggles between light-blue and dark-blue
+        document.getElementById('themeToggle').addEventListener('click', () => {
+          const currentTheme = localStorage.getItem('ajdTheme') || 'light-blue-theme'
+          const isDarkTheme = currentTheme.startsWith('dark-')
+
+          // Get the current color family (blue, green, purple, orange)
+          const colorFamily = currentTheme.split('-')[1]?.replace('-theme', '') || 'blue'
+
+          // Toggle between light and dark while keeping the same color family
+          const newTheme = isDarkTheme ? `light-${colorFamily}-theme` : `dark-${colorFamily}-theme`
+          setTheme(newTheme)
+        })
+
+        // Theme selector options
+        document.querySelectorAll('.theme-option').forEach(option => {
+          option.addEventListener('click', () => {
+            const themeName = option.dataset.theme
+            setTheme(themeName)
+          })
+        })
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('ajdTheme')
+        if (savedTheme) {
+          setTheme(savedTheme)
+        } else {
+          // Default theme
+          setTheme('light-blue-theme')
+        }
+      })
+
+      function appendMessage(role, content) {
+        // Parse markdown and sanitize HTML
+        const htmlContent = marked.parse(content)
+
+        const chatLog = document.getElementById('chatLog')
+        const messageDiv = document.createElement('div')
+        messageDiv.className = role === 'user' ? 'message user-message' : 'message assistant-message'
+
+        // Add avatar
+        const avatar = document.createElement('div')
+        avatar.className = role === 'user' ? 'message-avatar user-avatar' : 'message-avatar assistant-avatar'
+        avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>'
+        messageDiv.appendChild(avatar)
+
+        // Add content
+        const contentDiv = document.createElement('div')
+        contentDiv.className = 'message-content'
+        contentDiv.innerHTML = htmlContent
+        messageDiv.appendChild(contentDiv)
+
+        chatLog.appendChild(messageDiv)
+        chatLog.scrollTop = chatLog.scrollHeight
+      }
+
+      function addToHistory(role, content) {
+        const chat = getCurrentChat()
+        if (chat) {
+          chat.messages.push({ role, content })
+
+          // If this is the first user message, set the chat title
+          if (role === 'user' && chat.messages.filter(m => m.role === 'user').length === 1) {
+            updateChatTitle(chat.id, content)
+          }
+
+          localStorage.setItem('ajdAllChats', JSON.stringify(allChats))
+        }
+      }
+
+      function clearAllChats() {
+        allChats = []
+        localStorage.removeItem('ajdAllChats')
+        createNewChat() // Create a new chat with welcome message
+      }
+
+      document.getElementById('clearChat').addEventListener('click', clearAllChats)
+      document.getElementById('newChatBtn').addEventListener('click', () => {
+        createNewChat()
+      })
+
+      document.getElementById('toggleLang').addEventListener('click', () => {
+        const newLang = currentLang === 'en' ? 'ar' : 'en'
+        setLanguage(newLang)
+        // No need to clear chat, just update the UI language
+      })
+
+      document.getElementById('chatForm').addEventListener('submit', e => {
+        e.preventDefault()
+        sendMessage()
+      })
+
+      // Function to auto-resize textarea based on content
+      function autoResizeTextarea(textarea) {
+        // Reset height to auto to get the correct scrollHeight
+        textarea.style.height = 'auto'
+
+        // Set new height based on scrollHeight (with min/max constraints handled by CSS)
+        textarea.style.height = Math.min(Math.max(textarea.scrollHeight, 48), 200) + 'px'
+      }
+
+      const chatInput = document.getElementById('chatInput')
+
+      // Initial resize and setup
+      autoResizeTextarea(chatInput)
+
+      // Handle input events for auto-resizing
+      chatInput.addEventListener('input', () => {
+        autoResizeTextarea(chatInput)
+      })
+
+      // Handle keypress events for Enter key
+      chatInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
+          sendMessage()
+        }
+      })
+
+      function sendMessage() {
+        const text = document.getElementById('chatInput').value.trim()
+        if (!text) return
+        appendMessage('user', text)
+        addToHistory('user', text)
+        const chatInput = document.getElementById('chatInput')
+        chatInput.value = ''
+        // Reset textarea height after clearing
+        chatInput.style.height = '48px'
+
+        // Add loading message
+        const loadingId = 'loading-' + Date.now()
+        const loadingMsg = currentLang === 'ar' ? '... الرجاء الانتظار' : 'Please wait...'
+        const chatLog = document.getElementById('chatLog')
+        const loadingDiv = document.createElement('div')
+        loadingDiv.id = loadingId
+        loadingDiv.className = 'message assistant-message'
+        loadingDiv.innerHTML = `
+          <div class="message-avatar assistant-avatar"><i class="fas fa-spinner fa-spin"></i></div>
+          <div class="message-content" style="padding-bottom: 25px;"><p>${loadingMsg}</p></div>
+        `
+        chatLog.appendChild(loadingDiv)
+        chatLog.scrollTop = chatLog.scrollHeight
+
+        if (useMock) {
+          // Remove loading message
+          document.getElementById(loadingId)?.remove()
+
+          setTimeout(() => {
+            const reply = `(Mock GPT) You asked: '${text}'. In backend mode I would analyze Al Jazeera's documentary topics and compare them with your project.`
+            appendMessage('assistant', reply)
+            addToHistory('assistant', reply)
+          }, 600)
+        } else {
+          // Get current chat history for the API call
+          const currentChat = getCurrentChat()
+          const chatHistory = currentChat ? currentChat.messages : []
+
+          // Use fetch instead of htmx.ajax to avoid URI encoding issues
+          fetch(backendUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: text,
+              history: chatHistory.map(item => ({
+                role: item.role,
+                content: item.content
+              }))
+            })
+          })
+            .then(res => res.json())
+            .then(data => {
+              // Remove loading message
+              document.getElementById(loadingId)?.remove()
+
+              const reply = data.reply || 'No reply'
+              appendMessage('assistant', reply)
+              addToHistory('assistant', reply)
+            })
+            .catch(error => {
+              document.getElementById(loadingId)?.remove()
+              console.error('Request failed:', error)
+              const errorMsg = currentLang === 'ar' ? `خطأ: ${error.message || 'تعذر الاتصال بالخادم'}` : `Error: ${error.message || 'Could not connect to backend server'}`
+              appendMessage('assistant', errorMsg)
+              addToHistory('assistant', errorMsg)
+            })
+        }
+      }
+    </script>
+  </body>
+</html>
